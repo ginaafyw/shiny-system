@@ -107,11 +107,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .info-val.blurred{filter:blur(5px);user-select:none;pointer-events:none}
 .info-val.pulled{color:var(--success)}
 .info-val.bought{color:var(--accent)}
-.info-val.market{color:var(--success)}
-
-.sparkline-wrap{margin-top:6px}
-.spark-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:2px}
-.sparkline{width:100%;height:34px}
 
 .card-notes{font-size:11px;color:var(--text3);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-style:italic}
 .wish-notes{font-size:12px;color:var(--text2);margin-top:4px;font-style:italic}
@@ -119,8 +114,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .card-footer{padding:.5rem .75rem;border-top:1px solid var(--border);display:flex;gap:6px}
 .card-footer button{flex:1;font-size:11px;padding:5px 0;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px}
 .card-footer button:hover{background:var(--surface1)}
-.card-footer button.f-log{border-color:var(--accent-border);color:var(--accent)}
-.card-footer button.f-log:hover{background:var(--accent-bg)}
 .card-footer button.f-own{border-color:var(--wish-border);color:var(--wish);background:var(--wish-bg)}
 .card-footer button.f-del{border-color:var(--danger);color:var(--danger)}
 .card-footer button.f-del:hover{background:var(--danger-bg)}
@@ -150,6 +143,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:13px;padding:8px 18px;border-radius:20px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 
+/* Floating add button */
+.fab-add{position:fixed;right:1.5rem;bottom:1.5rem;width:56px;height:56px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:150;transition:transform .15s,box-shadow .15s}
+.fab-add:hover{transform:scale(1.06);box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.fab-add:active{transform:scale(.96)}
+.fab-add i{font-size:24px;line-height:1}
+@media(max-width:480px){
+  .fab-add{right:1rem;bottom:1rem;width:52px;height:52px}
+}
+
 /* Responsive */
 @media(max-width:480px){
   .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
@@ -163,8 +165,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   /* Icon-only buttons on mobile */
   .topbar .btn span, .topbar .btn-label{display:none}
   .topbar .btn{padding:0 10px;min-width:36px;justify-content:center}
-  /* Log price — icon only */
-  .f-log .log-label{display:none}
   /* "I own this" — keep text, it's important */
 }
 
@@ -263,7 +263,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <option value="Custom">Custom</option>
       </select>
     </div>
-    <button class="btn primary" onclick="openAdd()"><i class="ti ti-plus"></i><span class="btn-label"> Add card</span></button>
     <button class="btn" onclick="exportCSV()" title="Export to CSV"><i class="ti ti-download"></i><span class="btn-label"> Export</span></button>
     <button class="btn" onclick="triggerImport()" title="Import from CSV"><i class="ti ti-upload"></i><span class="btn-label"> Import</span></button>
     <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="importCSV(event)">
@@ -279,8 +278,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="pill wish-pill" data-f="wishlist" onclick="setFilter(this,'wishlist')">Wishlist</button>
     <div class="spacer"></div>
     <button class="toggle-btn" onclick="togglePrices()" id="priceToggle">
-      <i class="ti ti-eye" id="priceIcon"></i>
-      <span id="priceLabel">Hide cost</span>
+      <i class="ti ti-eye-off" id="priceIcon"></i>
+      <span id="priceLabel">Show cost</span>
     </button>
   </div>
 
@@ -337,23 +336,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 <div class="toast" id="toast"></div>
 
-<!-- Log price modal -->
-<div class="overlay" id="logOverlay" style="display:none">
-  <div class="modal">
-    <h3>Log today's market value</h3>
-    <p class="sub" id="logSub"></p>
-    <div class="form-grid">
-      <div class="form-group">
-        <div class="form-label">Market value (SGD)</div>
-        <input type="number" id="logVal" placeholder="e.g. 45.00" step="0.01" min="0">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button onclick="closeOverlay('logOverlay')">Cancel</button>
-      <button class="confirm" onclick="confirmLog()">Save</button>
-    </div>
-  </div>
-</div>
+<button class="fab-add" onclick="openAdd()" title="Add card" aria-label="Add card">
+  <i class="ti ti-plus"></i>
+</button>
+
 
 <!-- Add / Edit card modal -->
 <div class="overlay" id="addOverlay" style="display:none">
@@ -443,9 +429,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 // ── State ──────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'pdex_v1';
 let cards = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || [];
-let pricesHidden = false;
+let pricesHidden = true;
 let currentFilter = 'all';
-let logTargetId = null;
 let editId = null;
 const today = () => new Date().toISOString().slice(0,10);
 
@@ -474,53 +459,16 @@ function togglePrices() {
   render();
 }
 
-// ── Sparkline ──────────────────────────────────────────────────────────
-function sparklineSVG(history) {
-  if (!history || history.length < 2) {
-    return '<div style="height:34px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3)">No price history yet — tap Log price</div>';
-  }
-  const vals = history.map(h => h.v);
-  const min = Math.min(...vals), max = Math.max(...vals), range = max - min || 1;
-  const W = 200, H = 32, pad = 4;
-  const pts = vals.map((v, i) => {
-    const x = pad + (i / (vals.length - 1)) * (W - 2 * pad);
-    const y = H - pad - ((v - min) / range) * (H - 2 * pad);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
-  const last = vals[vals.length - 1], first = vals[0];
-  const col = last >= first ? '#059669' : '#dc2626';
-  const lastPt = pts.split(' ').pop().split(',');
-  const startDate = history[0].d.slice(5);
-  const endDate = history[history.length-1].d.slice(5);
-  return `
-    <div class="sparkline-wrap">
-      <div class="spark-labels"><span>${startDate}</span><span>S$${last.toFixed(0)}</span><span>${endDate}</span></div>
-      <svg class="sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-        <circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="3" fill="${col}"/>
-      </svg>
-    </div>`;
-}
-
 // ── Stats bar ──────────────────────────────────────────────────────────
 function renderStats() {
   const owned = cards.filter(c => c.status === 'owned');
   const wishlist = cards.filter(c => c.status === 'wishlist');
   const totalCost = owned.reduce((s, c) => s + (c.cost || 0), 0);
-  const latestVal = owned.reduce((s, c) => {
-    if (!c.history || !c.history.length) return s + (c.cost || 0);
-    return s + c.history[c.history.length - 1].v;
-  }, 0);
-  const gain = latestVal - totalCost;
-  const gainClass = gain >= 0 ? 'gain' : 'loss';
-  const gainStr = (gain >= 0 ? '+' : '') + 'S$' + Math.abs(Math.round(gain)).toLocaleString();
 
   document.getElementById('statsRow').innerHTML = `
     <div class="stat"><div class="lbl">Owned</div><div class="val">${owned.length}</div></div>
-    <div class="stat"><div class="lbl">Wishlist</div><div class="val wish">${wishlist.length}/3</div></div>
+    <div class="stat"><div class="lbl">Wishlist</div><div class="val wish">${wishlist.length}</div></div>
     <div class="stat"><div class="lbl">Total cost</div><div class="val">${pricesHidden ? '—' : 'S$' + Math.round(totalCost).toLocaleString()}</div></div>
-    <div class="stat"><div class="lbl">Est. value</div><div class="val accent">${pricesHidden ? '—' : 'S$' + Math.round(latestVal).toLocaleString()}</div></div>
-    <div class="stat"><div class="lbl">Gain / loss</div><div class="val ${gainClass}">${pricesHidden ? '—' : gainStr}</div></div>
   `;
 }
 
@@ -558,7 +506,6 @@ function render() {
 
   document.getElementById('cardGrid').innerHTML = filtered.map(c => {
     const isWish = c.status === 'wishlist';
-    const lastVal = c.history && c.history.length ? c.history[c.history.length - 1].v : null;
     const blurClass = pricesHidden ? 'blurred' : '';
     const RARITY_MAP = {
       'UR':     { cls: 'r-UR',     label: 'UR / HR / ★★★' },
@@ -603,12 +550,6 @@ function render() {
             <span class="info-key">Acquired</span>
             <span class="info-val" style="font-size:11px">${c.date || '—'}</span>
           </div>
-          ${lastVal != null ? `
-          <div class="info-row" style="margin-top:4px">
-            <span class="info-key">Market value</span>
-            <span class="info-val market ${blurClass}">S$${lastVal.toFixed(0)}</span>
-          </div>` : ''}
-          ${sparklineSVG(c.history)}
           ${c.notes ? `<div class="card-notes">${c.notes}</div>` : ''}
         `}
       </div>
@@ -616,37 +557,13 @@ function render() {
       <div class="card-footer">
         ${isWish
           ? `<button class="f-own" onclick="markOwned(${c.id})"><i class="ti ti-check"></i> I own this</button>`
-          : `<button class="f-log" onclick="openLog(${c.id})"><i class="ti ti-chart-line"></i><span class="log-label"> Log price</span></button>`
+          : ''
         }
         <button class="f-edit" onclick="openEdit(${c.id})"><i class="ti ti-edit"></i></button>
         <button class="f-del" onclick="deleteCard(${c.id})"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   }).join('');
-}
-
-// ── Log price ──────────────────────────────────────────────────────────
-function openLog(id) {
-  logTargetId = id;
-  const c = cards.find(x => x.id === id);
-  document.getElementById('logSub').textContent = `#${c.dex} ${c.en} · ${c.rarity || ''} · ${c.set || ''}`;
-  document.getElementById('logVal').value = '';
-  document.getElementById('logOverlay').style.display = 'flex';
-  setTimeout(() => document.getElementById('logVal').focus(), 100);
-}
-
-function confirmLog() {
-  const val = parseFloat(document.getElementById('logVal').value);
-  if (!val || val <= 0) { toast('Enter a valid price'); return; }
-  const c = cards.find(x => x.id === logTargetId);
-  if (!c.history) c.history = [];
-  const t = today();
-  const idx = c.history.findIndex(h => h.d === t);
-  if (idx >= 0) c.history[idx].v = val;
-  else c.history.push({ d: t, v: val });
-  save(); render();
-  closeOverlay('logOverlay');
-  toast('Price logged — S$' + val.toFixed(2));
 }
 
 // ── Mark owned ─────────────────────────────────────────────────────────
@@ -718,7 +635,6 @@ function saveCard() {
     return;
   }
   const id = editId || (Math.max(0, ...cards.map(c => c.id)) + 1);
-  const existing = editId ? cards.find(c => c.id === editId) : null;
   const card = {
     id,
     dex: document.getElementById('f_dex').value.trim() || '???',
@@ -734,7 +650,6 @@ function saveCard() {
     source: status === 'owned' ? document.getElementById('f_source').value : null,
     date: status === 'owned' ? document.getElementById('f_date').value : null,
     notes: document.getElementById('f_notes').value.trim(),
-    history: existing ? (existing.history || []) : []
   };
   if (editId) cards = cards.map(c => c.id === editId ? card : c);
   else cards.push(card);
@@ -746,15 +661,13 @@ function saveCard() {
 // ── CSV Export ─────────────────────────────────────────────────────────
 function exportCSV() {
   if (!cards.length) { toast('No cards to export'); return; }
-  const headers = ['Dex#','English','Japanese','Chinese','Rarity','Set','Status','My Cost (SGD)','Source','Date Acquired','Latest Market Value (SGD)','Image URL','Notes'];
+  const headers = ['Dex#','English','Japanese','Chinese','Rarity','Set','Status','My Cost (SGD)','Source','Date Acquired','Image URL','Notes'];
   const rows = cards.map(c => {
-    const lastVal = c.history && c.history.length ? c.history[c.history.length - 1].v : '';
     return [
       c.dex, c.en, c.jp, c.sc, c.rarity, c.set, c.status,
       c.cost != null ? c.cost.toFixed(2) : '',
       c.source || '',
       c.date || '',
-      lastVal !== '' ? lastVal.toFixed(2) : '',
       c.img || '',
       c.notes
     ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',');
@@ -821,7 +734,6 @@ function importCSV(event) {
     const iCost   = col(['cost']);
     const iSource = col(['source']);
     const iDate   = col(['date']);
-    const iMkt    = col(['market']);
     const iNotes  = col(['notes']);
     const iImg    = col(['img', 'image']);
 
@@ -845,11 +757,6 @@ function importCSV(event) {
       }
 
       const costVal = iCost !== -1 ? parseFloat(row[iCost]) : NaN;
-      const mktVal  = iMkt  !== -1 ? parseFloat(row[iMkt])  : NaN;
-
-      const history = (!isNaN(mktVal) && mktVal > 0)
-        ? [{ d: today(), v: mktVal }]
-        : [];
 
       const card = {
         id:      nextId(),
@@ -865,7 +772,6 @@ function importCSV(event) {
         source:  (iSource !== -1 ? row[iSource] : 'single').trim() || 'single',
         date:    (iDate  !== -1 ? row[iDate]  : today()).trim() || today(),
         notes:   (iNotes !== -1 ? row[iNotes] : '').trim(),
-        history,
       };
       cards.push(card);
       added++;
@@ -992,7 +898,6 @@ function buildSlots(slice, startIdx) {
     const isWish    = c.status === 'wishlist';
     const dotCls    = RARITY_DOT[c.rarity] || 'rd-Custom';
     const backStyle = RARITY_BACK_STYLE[c.rarity] || 'background:#eee;color:#555';
-    const lastVal   = c.history && c.history.length ? c.history[c.history.length-1].v : null;
 
     const front = `
       <div class="bslot-front">
@@ -1013,8 +918,7 @@ function buildSlots(slice, startIdx) {
         ${c.jp || c.sc ? `<div class="bback-alt">${[c.jp, c.sc].filter(Boolean).join(' · ')}</div>` : ''}
         ${c.set ? `<div class="bback-set">${c.set}</div>` : ''}
         <div class="bback-divider"></div>
-        ${!isWish && c.cost != null ? `<div class="bback-row"><span class="bback-lbl">Paid</span><span class="bback-val">S$${c.cost.toFixed(2)}</span></div>` : ''}
-        ${lastVal != null ? `<div class="bback-row"><span class="bback-lbl">Mkt</span><span class="bback-val" style="color:#7dd3a8">S$${lastVal.toFixed(0)}</span></div>` : ''}
+        ${!isWish && c.cost != null ? `<div class="bback-row"><span class="bback-lbl">Paid</span><span class="bback-val">${pricesHidden ? '—' : 'S$' + c.cost.toFixed(2)}</span></div>` : ''}
         ${c.date ? `<div class="bback-row"><span class="bback-lbl">Date</span><span class="bback-val">${c.date}</span></div>` : ''}
       </div>`;
 
