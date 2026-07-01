@@ -182,18 +182,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .binder-counter{font-size:13px;color:var(--text3);margin-left:auto}
 
 /* ── Book spread ── */
-.binder-book{display:flex;align-items:stretch;gap:0;background:#2a1f14;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.45);position:relative}
-.binder-spine{width:32px;background:linear-gradient(to right,#0f0800,#3d2a18,#5c3d1e,#3d2a18,#0f0800);flex-shrink:0;position:relative;z-index:2;box-shadow:inset -4px 0 10px rgba(0,0,0,.5),inset 4px 0 10px rgba(0,0,0,.5)}
+.binder-book{display:flex;align-items:stretch;gap:0;background:#2a1f14;border-radius:16px;overflow:clip;box-shadow:0 8px 40px rgba(0,0,0,.45);position:relative;width:100%;box-sizing:border-box}
+.binder-spine{width:28px;flex-shrink:0;background:linear-gradient(to right,#0f0800,#3d2a18,#5c3d1e,#3d2a18,#0f0800);position:relative;z-index:2;box-shadow:inset -4px 0 10px rgba(0,0,0,.5),inset 4px 0 10px rgba(0,0,0,.5)}
 .binder-spine::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(to bottom,transparent,transparent 14px,rgba(0,0,0,.2) 14px,rgba(0,0,0,.2) 15px)}
 .binder-spine::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:2px;height:100%;background:rgba(0,0,0,.3)}
-.binder-page{flex:1;background:#1a261a;padding:20px 16px;display:flex;flex-direction:column;position:relative;min-width:0;contain:layout paint}
-.binder-page-left{background:linear-gradient(to right,#162016,#1e2a1e)}
-.binder-page-right{background:linear-gradient(to left,#162016,#1e2a1e)}
+/* Each page takes exactly half the available width minus spine */
+.binder-page{flex:1 1 0;min-width:0;max-width:calc(50% - 14px);background:#1a261a;padding:16px 12px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.binder-page-left{background:linear-gradient(to right,#162016,#1e2a1e);border-radius:16px 0 0 16px}
+.binder-page-right{background:linear-gradient(to left,#162016,#1e2a1e);border-radius:0 16px 16px 0}
 .binder-page::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(to bottom,transparent,transparent 40px,rgba(255,255,255,.012) 40px,rgba(255,255,255,.012) 41px);pointer-events:none}
-.binder-page-label{font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.binder-page-label{font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:8px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
 
-/* 3×3 grid — slots sized to fill the page nicely */
-.binder-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:10px;flex:1;aspect-ratio:1/1}
+/* 3×3 grid — columns fill the page, rows auto-size to card aspect ratio */
+.binder-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,auto);gap:8px;width:100%}
 
 /* ── Binder card slot ── */
 .bslot{aspect-ratio:2.5/3.5;border-radius:6px;cursor:pointer;position:relative;perspective:800px;-webkit-perspective:800px}
@@ -227,11 +228,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .binder-nav button:disabled{opacity:.3;cursor:not-allowed}
 .binder-nav .page-info{font-size:13px;color:var(--text2);min-width:120px;text-align:center}
 
-/* ── Mobile: stack pages vertically ── */
-@media(max-width:640px){
-  .binder-page{padding:12px;flex:unset;border-radius:12px}
-  .binder-grid{gap:8px}
-  /* Hide pagination on mobile — continuous scroll instead */
+/* ── Tablet/Mobile (≤1024px): stack pages vertically, continuous scroll ── */
+@media(max-width:1024px){
+  .binder-book{flex-direction:column;border-radius:12px}
+  .binder-page{flex:unset;max-width:100%;padding:12px;overflow:visible}
+  .binder-page-left{border-radius:12px 12px 0 0}
+  .binder-page-right{border-radius:0 0 12px 12px}
+  .binder-spine{width:100%;height:16px;background:linear-gradient(to bottom,#0f0800,#3d2a18,#5c3d1e,#3d2a18,#0f0800)}
+  .binder-spine::before{background:repeating-linear-gradient(to right,transparent,transparent 14px,rgba(0,0,0,.2) 14px,rgba(0,0,0,.2) 15px)}
+  .binder-spine::after{width:100%;height:2px;top:50%;left:0;transform:translateY(-50%)}
+  .binder-grid{gap:8px;grid-template-rows:repeat(3,auto)}
+  /* Hide pagination — continuous scroll instead */
   .binder-nav{display:none}
 }
 </style>
@@ -836,23 +843,11 @@ function renderBinder() {
       return true;
     })
     .sort((a, b) => (parseInt(a.dex) || 9999) - (parseInt(b.dex) || 9999));
-  preloadBinderImages(binderCards);
   binderSpread = 0;
   drawSpread();
 }
 
-// Preload all card images into browser cache to eliminate black flicker on page turns
-const _preloadCache = {};
-function preloadBinderImages(cardList) {
-  cardList.forEach(c => {
-    if (!c.img || _preloadCache[c.img]) return;
-    const img = new Image();
-    img.src = c.img;
-    _preloadCache[c.img] = img; // hold reference so GC doesn't discard it
-  });
-}
-
-function isMobile() { return window.innerWidth <= 640; }
+function isMobile() { return window.innerWidth <= 1024; }
 
 function drawSpread() {
   // ── Mobile: continuous scroll — single grid, all cards in dex order ───
@@ -914,7 +909,7 @@ function buildSlots(slice, startIdx) {
     const front = `
       <div class="bslot-front">
         ${c.img
-          ? `<img src="${c.img}" alt="${c.en}" loading="eager" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          ? `<img src="${c.img}" alt="${c.en}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
           : ''}
         <div class="no-art" style="${c.img ? 'display:none' : 'display:flex'}">
           <i class="ti ti-photo-off"></i>
